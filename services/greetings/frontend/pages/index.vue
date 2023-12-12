@@ -10,20 +10,17 @@
 export default {
   data() {
     return {
-      cookieExists: false, // Add this line
-      username: '',        // You might want to set a default value or fetch it from somewhere
+      cookieExists: false,
+      username: '',
     };
   },
   created() {
-    // Проверяем наличие куки
     const cookie = useCookie('username');
 
-    // Если куки установлены, устанавливаем cookieExists в true и сохраняем имя пользователя
     if (cookie.value) {
       this.cookieExists = true;
       this.username = cookie.value;
     } else {
-      // Если куки не установлены, перенаправляем на страницу register
       this.$router.push('/register');
     }
   },
@@ -31,5 +28,4 @@ export default {
 </script>
 
 <style scoped>
-/* Ваши стили компонента */
 </style>
