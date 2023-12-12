@@ -10,7 +10,7 @@ Coming...
 
 | Service | Language | Checker | Sploits | Authors |
 |---------|----------|---------|---------|---------|
-| **[greetings](services/greetings/)** | Go|nuxt | [Checker](checkers/greetings/) | [Sploits](sploits/greetings/) | [@gusyaross](https://github.com/gusyaross) |
+| **[greetings](services/greetings/)** | Go/nuxt | [Checker](checkers/greetings/) | [Sploits](sploits/greetings/) | [@gusyaross](https://github.com/gusyaross) |
 
 
 ## Infrastructure
