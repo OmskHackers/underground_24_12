@@ -22,11 +22,20 @@ export default {
     };
   },
   methods: {
-    registerUser() {
-      const cookie = useCookie('username');
-      cookie.value = this.username;
-
-      this.$router.push('/');
+    async registerUser() {
+      const requestBody = {
+        username: this.username,
+        password: this.password,
+      };
+      const { data, error } = await useFetch('http://localhost:8081/api/auth/register', {
+        initialCache: false,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      console.log(data.value);
     },
   },
 };
