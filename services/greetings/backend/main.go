@@ -10,9 +10,12 @@ import (
 )
 
 var (
-	server              *gin.Engine
-	AuthController      controllers.AuthController
+	server         *gin.Engine
+	AuthController controllers.AuthController
+	UserController controllers.UserController
+
 	AuthRouteController routes.AuthRouteController
+	UserRouteController routes.UserRouteController
 )
 
 func init() {
@@ -21,6 +24,9 @@ func init() {
 	AuthController = controllers.NewAuthController(initializers.DB)
 	AuthRouteController = routes.NewAuthRouteController(AuthController)
 
+	UserController = controllers.NewUserController(initializers.DB)
+	UserRouteController = routes.NewUserRouteController(UserController)
+
 	server = gin.Default()
 	server.Use(cors.Default())
 }
@@ -28,5 +34,6 @@ func init() {
 func main() {
 	router := server.Group("/api")
 	AuthRouteController.AuthRoute(router)
+	UserRouteController.UserRoute(router)
 	server.Run(":8081")
 }

@@ -1,7 +1,8 @@
 <template>
-  <div class="registration-container">
-    <h2>Register Page</h2>
-    <form @submit.prevent="registerUser" class="registration-form">
+  <div class="login-container">
+    <h2>Login Page</h2>
+    <form @submit.prevent="loginUser" class="login-form">
+      <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" v-model="username" required>
@@ -12,12 +13,11 @@
         <input type="password" id="password" v-model="password" required>
       </div>
 
-      <button type="submit">Register</button>
+      <button type="submit">Login</button>
       <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
     </form>
-
-    <div class="login-link">
-      <p>Already have an account? <router-link to="/login">Login</router-link></p>
+    <div class="register-link">
+      <p>No account? <router-link to="/register">Register</router-link></p>
     </div>
   </div>
 </template>
@@ -28,45 +28,51 @@ export default {
     return {
       username: '',
       password: '',
+      successMessage: '',
       errorMessage: '',
     };
   },
   methods: {
-    async registerUser() {
+    async loginUser() {
       const requestBody = {
         username: this.username,
         password: this.password,
       };
-      const { data, pending, error, refresh } = await useFetch('/api/auth/register', {
-          initialCache: false,
-          method: 'POST',
-          headers: {
+      const { data, pending, error, refresh } = await useFetch('/api/auth/login', {
+        initialCache: false,
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+        },
+        body: JSON.stringify(requestBody),
       });
       if (!error.value) {
+        const cookie = useCookie('session');
+        cookie.value = data.value.message.user.session_value
         this.$router.push({
-        name: 'login',
-        query: { successMessage: 'Successfully registered. Please log in.' },
+        name: 'index',
         });
       } else {
         if (String(error.value).includes('409')) {
           this.errorMessage = 'This username already exists';
         } else if (String(error.value).includes('400')) {
-          this.errorMessage = 'Bad params';
+          this.errorMessage = 'Invalid login or password';
         } else { 
           this.errorMessage = 'Error with connection the server';
         }
       }
     },
   },
+  mounted() {
+    this.successMessage = this.$route.query.successMessage || '';
+    this.$router.replace({ query: [] });
+  },
 };
 </script>
 
 <style scoped>
 
-.bg-img, .registration-container {
+.bg-img, .login-container {
   background-image: url('/static/background.jpg');
   background-position: center center;
   background-repeat: no-repeat;
@@ -74,7 +80,7 @@ export default {
   background-size: cover;
 }
  
-.registration-container {
+.login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,7 +89,7 @@ export default {
   background-color: #f0f0f0;
 }
 
-.registration-form {
+.login-form {
   width: 300px;
   padding: 20px;
   margin: 20px;
@@ -92,6 +98,12 @@ export default {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: 2px solid #4caf50;
   height: auto;
+}
+
+.success-message {
+  color: #008000;
+  font-size: 16px;
+  margin-top: 10px;
 }
 
 .form-group {
