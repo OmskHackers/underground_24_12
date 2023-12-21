@@ -23,15 +23,9 @@ void init() {
 }
 
 int encrypt(Entry textEntry, char* outputBuffer, const long int outputBufferSize) {
-    // [0:64] err [64:128] key [66:2048] [2048] \0
-    // 
-    printf("bufZise = %ld\n", outputBufferSize); // TODO: REMOVE
-    printf("text = %s\n", textEntry.data); // TODO: REMOVE
-
     char error[ERROR_SIZE] = {};
     char encrypted[ENCRYPTED_SIZE] = {};
     char key[KEY_SIZE] = {};
-    // char entries[20][256] = {};
 
     int type = randLength(1, MAX_CRYPT_TYPE + 1);
 
@@ -70,7 +64,6 @@ int encrypt(Entry textEntry, char* outputBuffer, const long int outputBufferSize
     entries[i]->data = malloc(textEntry.length);
     memcpy(entries[i++]->data, textEntry.data, textEntry.length);
 
-    // char postcursor[8][8] = {};
     for (; i < entryCount; i++) {
         entries[i] = malloc(sizeof(Entry));
         int length = randLength(3, 8);
@@ -94,7 +87,6 @@ int encrypt(Entry textEntry, char* outputBuffer, const long int outputBufferSize
     }; // TODO refactor to
     
     if (recollect(outputBuffer, outputBufferSize, elements, 3) != 0) { // TODO give &elements
-        printf("Encrypting recollect error\n");
         for (i = 0; i < entryCount; i++) {
             free(entries[i]->data);
             free(entries[i]);
@@ -106,9 +98,7 @@ int encrypt(Entry textEntry, char* outputBuffer, const long int outputBufferSize
         return -1;
     }
 
-    //printf("encryCount = %d\n", entryCount);
     for (i = 0; i < entryCount; i++) {
-        //printf("i = %d\n", i);
         free(entries[i]->data);
         free(entries[i]);
     }
@@ -161,11 +151,8 @@ int decrypt(Entry encryptedTextEntry, Entry keyEntry, char* outputBuffer, const 
         { error, strlen(error) },
         { message->messageEntry->data, message->messageEntry->length }
     };
-
-    printf("in decr outsizebuf = %ld\n", outputBufferSize); 
     
     if (recollect(outputBuffer, outputBufferSize, elements, 2) != 0) {
-        printf("Decrypting recollect error\n");
         free(entries);
         free(messageEntry);
         deleteMessage(message);
@@ -179,10 +166,6 @@ int decrypt(Entry encryptedTextEntry, Entry keyEntry, char* outputBuffer, const 
     return 0;
 };
 
-
-int testFlask(Entry textEntry) {
-    printf("Flask call, text = %s\n", textEntry.data);
-}
 
 #ifdef __cplusplus
 }

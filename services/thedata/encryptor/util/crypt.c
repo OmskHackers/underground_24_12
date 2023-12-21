@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void encryptPart(
     unsigned char* data,
     unsigned int size,
@@ -101,3 +105,7 @@ void decryptPart(
 
     free(temp);
 }
+
+#ifdef __cplusplus
+}
+#endif

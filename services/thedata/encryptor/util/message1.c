@@ -59,9 +59,7 @@ static int mc1_encrypt(Message* message) {
         message->messageEntry->data[message->messageEntry->length++] = (char)entry->length; // TODO add k|kk xor
         unsigned char cryptKey = mc1_crypt_params[i%8].key;
         unsigned char cryptStep = mc1_crypt_params[i%8].step;
-        printf("i = %d; %s\n", i, entry->data); // TODO: REMOVE
         if (entry->data[0] >= 32) {
-            printf("^^^^^^^^^^^^^\n"); // TODO: REMOVE
             message->keyEntry->data[message->keyEntry->length++] = (char)i; // special
         }
         for (int j = 0; j < entry->length; j++) {
@@ -79,8 +77,6 @@ static int mc1_encrypt(Message* message) {
 
 static int mc1_decrypt(Message* message) {
     // entries[0] is encrypted message, entriesCount = length of entries[0]
-    printf("decripting shijth\n"); //TODO: udalit
-    printf("in decrypt key = %s\n", message->keyEntry->data); //TODO: udalit
 
     // TODO add safety on Length
 
@@ -97,20 +93,16 @@ static int mc1_decrypt(Message* message) {
     encryptedInd += 4;
     
     int spec = message->keyEntry->data[keyInd++];
-    printf("spec == %d\n", spec); // TODO: REMOVE
 
     for (int i = 0; i < spec; i++) {
         // TODO add k|kk xor
         unsigned char length = encryptedEntry->data[encryptedInd++];
         encryptedInd += length;
-        printf("spec len %d == %d\n", i, length); //TODO : REMOVE
     }
     
     
     message->messageEntry->length = 0;
     int length = encryptedEntry->data[encryptedInd++];
-
-    printf("message1 decr length = %d\n", length); // TODO : REMOVE
     
     unsigned char cryptKey = mc1_crypt_params[spec%8].key;
     unsigned char cryptStep = mc1_crypt_params[spec%8].step;

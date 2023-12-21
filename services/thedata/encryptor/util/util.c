@@ -81,23 +81,19 @@ int compressString(char* buffer, const int length) {
 int recollect(char* buffer, const long int length, Entry* elements, const long int elementsCount) {
     int idx = 0;
     if (idx + sizeof(elementsCount) > length) {
-        printf("%d + %ld > %ld\n", idx, sizeof(elementsCount), length);
         return -1;
     }
     memcpy(buffer + idx, (const char*)&elementsCount, sizeof(elementsCount));
     idx += sizeof(elementsCount);
     for (int i = 0; i < elementsCount; i++) {
         if (idx + sizeof(elements[i].length) > length) {
-            printf("%d + %ld > %ld\n", idx, sizeof(elements[i].length), length);
             return -1;
         }
         memcpy(buffer + idx, (const char*)&elements[i].length, sizeof(elements[i].length));
         idx += sizeof(elements[i].length);
         if (idx + elements[i].length > length) {
-            printf("%d + %ld > %ld\n", idx, elements[i].length, length);
             return -1;
         }
-        memcpy(buffer + idx, elements[i].data, elements[i].length);
         idx += elements[i].length;
     }
     return 0;
