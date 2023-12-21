@@ -47,7 +47,6 @@ def index():
     message = ''
     if form.validate_on_submit():
         message = form.message.data
-        encryptor.testFlask(message) # TODO remove
         result = encryptor.encrypt(message)
         (error, encryptedMessage, key) = result
         # sleep(10) todo remove

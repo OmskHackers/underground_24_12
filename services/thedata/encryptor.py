@@ -26,7 +26,6 @@ def _getLib() -> ctypes.CDLL:
     return _libSo
 
 def encrypt(message : str) -> tuple[str]:
-    print('pythino encripto') # TODO REMOVE
     global _encrypt
     if not _encrypt:
         _encrypt = _getLib().encrypt
@@ -36,7 +35,6 @@ def encrypt(message : str) -> tuple[str]:
     outCharPtr = ctypes.create_string_buffer(BUFFER_SIZE)
     _encrypt(messageEntry, outCharPtr, BUFFER_SIZE)
     out = util.parseRecollected(outCharPtr.raw)
-    print(out) # TODO REMOVE
     if len(out) < 3:
         return ('error parsing parsing recollection, len(out) < 3', '', '')
     error = out[0].decode('ascii')
@@ -56,11 +54,9 @@ def decrypt(encryptedMessage : str, key : str) -> tuple[str]:
         keyEntry = Entry(keyBytes, len(keyBytes))
     except:
         return('Wrong key', '')
-    print(encryptedMessageBytes, keyBytes) # TODO REMOVE
     outCharPtr = ctypes.create_string_buffer(BUFFER_SIZE)
     _decrypt(encryptedMessageEntry, keyEntry, outCharPtr, BUFFER_SIZE)
     out = util.parseRecollected(outCharPtr.raw)
-    print('python decrypt out =', out)
     if len(out) < 2:
         return ('error parsing parsing recollection, len(out) < 2', '')
     try:
@@ -71,13 +67,3 @@ def decrypt(encryptedMessage : str, key : str) -> tuple[str]:
     return (error, decryptedMessage)
 
 
-_testFlask = None
-
-def testFlask(message : str):
-    global _testFlask
-    if not _testFlask:
-        _testFlask = _getLib().testFlask
-        _testFlask.argtypes = [Entry]
-    messageBytes = message.encode('ascii')
-    messageEntry = Entry(messageBytes, len(messageBytes))
-    _testFlask(messageEntry)
