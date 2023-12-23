@@ -23,9 +23,12 @@ def encrypt(m):
 
     a = sympy.prevprime(aV)
     b = sympy.nextprime(bV)
+    
+    a = min(a,b)
+    b = max(a,b)
+    n = a*a*b
+    
     r = abs(aV-bV)
-
-    n = a*b
 
     g1 = random.randint(1, n)
     g2 = random.randint(1, n)
