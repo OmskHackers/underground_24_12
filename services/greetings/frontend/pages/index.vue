@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script>
+<script >
 export default {
   data() {
     return {
@@ -21,33 +21,39 @@ export default {
       username: '',
     };
   },
-  mounted() {
+  async mounted() {
     const cookie = useCookie('session');
-
     if (cookie.value) {
-      const { data, pending, error, refresh } = useFetch('/api/user', {
-        initialCache: false,
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+      const { data, error } = await useFetch('/api/user/profile', {
       });
       if (!error.value) {
         this.username = data.value.message.user.username;
+        this.cookieExists = true
       } else {
-        this.$router.push('/login');
+        this.$router.push({
+        name: 'login',
+        });
       }
     } else {
-      this.$router.push('/register');
+      this.$router.push({
+        name: 'register',
+        });
     }
   },
   methods: {
     logout() {
-      // Add logic for logging out
+      const cookie = useCookie('session');
+      cookie.value = null;
+      this.cookieExists = false,
+      this.username = ''
+      this.$router.push({
+        name: 'login',
+        });
     },
     sendCard() {
-      // Add logic for sending a card
+      this.$router.push({
+        name: 'sendcard',
+        });
     },
   },
 };

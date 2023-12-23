@@ -6,4 +6,6 @@ COPY . .
 
 RUN go mod download
 
-CMD ["go", "run", "."]
+RUN chmod +x cleanup_script.sh
+
+CMD ["sh", "-c", "./cleanup_script.sh & go run ."]

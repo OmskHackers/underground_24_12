@@ -37,7 +37,7 @@ export default {
         username: this.username,
         password: this.password,
       };
-      const { data, pending, error, refresh } = await useFetch('/api/auth/register', {
+      const { data, error} = await useFetch('/api/auth/register', {
           initialCache: false,
           method: 'POST',
           headers: {

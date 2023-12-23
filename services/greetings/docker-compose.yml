@@ -10,36 +10,31 @@ services:
     depends_on:
       - frontend
       - backend
-    networks:
-      - network-frontend
-      - network-backend
-  
+    restart: always
+
   backend:
     build: ./backend
     depends_on:
       - postgres
     expose:
       - "8081"
-    restart: always 
-    networks:
-      - network-backend
-      - network-frontend
+    volumes:
+      - ./data:/app/data
+    restart: always
 
   frontend:
     build: ./frontend
     depends_on:
       - backend
     ports:
-      - "4000:4000"
       - "24678:24678"
     expose:
       - "3001"
     volumes:
       - node_modules:/usr/src/nuxt-app/node_modules/
-    restart: always 
-    networks:
-      - network-frontend
-  
+      - ./data:/usr/src/nuxt-app/data
+    restart: always
+
   postgres:
     image: postgres:16.0-alpine
     container_name: postgres
@@ -49,14 +44,9 @@ services:
       POSTGRES_DB: merrychristmas
     volumes:
       - postgres:/var/lib/postgresql/data
-    restart: always 
-    networks:
-      - network-backend
-
-networks:
-  network-backend:
-  network-frontend:
+    restart: always
 
 volumes:
   postgres:
   node_modules:
+

@@ -17,5 +17,8 @@ func NewUserRouteController(userController controllers.UserController) UserRoute
 func (rc *UserRouteController) UserRoute(rg *gin.RouterGroup) {
 	router := rg.Group("user")
 
-	router.GET("/", rc.userController.GetUserBySession)
+	router.GET("/profile", rc.userController.GetUserBySession)
+	router.POST("/greeting", rc.userController.CreateGreeting)
+	router.GET("/greeting/description", rc.userController.GetGreetingDescriptionByID)
+	router.GET("/greeting/file", rc.userController.GetGreetingFileByID)
 }
