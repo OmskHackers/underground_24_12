@@ -1,0 +1,8 @@
+version: "3"
+services:
+  strongbox:
+    build: .
+    volumes:
+      - ./data:/service/data
+    ports: 
+      - "6666:6666" 

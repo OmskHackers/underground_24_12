@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS strongbox (
+    id INTEGER PRIMARY KEY,
+    r TEXT NOT NULL,
+    g TEXT NOT NULL,
+    ct TEXT NOT NULL
+);
+
