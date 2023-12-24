@@ -3,12 +3,20 @@ import random
 
 import redis
 import sympy
+from Crypto.Util.number import *
+
+import sys
+original_argv = sys.argv.copy()
+sys.argv = [arg for arg in sys.argv if not arg.startswith("--custom-arg")]
 from pwn import *
+sys.argv = original_argv
+
+context.log_level = 'error'
 
 OK, CORRUPT, MUMBLE, DOWN = 101, 102, 103, 104
 port = 6666
 
-redis_connection = redis.StrictRedis(host='localhost', port=6379, db=0)
+redis_connection = redis.StrictRedis(host='37.27.20.137', port=6279, db=0)
 
 
 def lucasV(n, p, q):
@@ -22,8 +30,8 @@ def lucasV(n, p, q):
         return lucasV((n - 1) // 2, p, q) * lucasV((n + 1) // 2, p, q) - p * pow(q, (n - 1) // 2)
 
 
-def L(x,a):
-    return (x-1)//a
+def L(x, a):
+    return (x - 1) // a
 
 
 def close(code):
@@ -33,7 +41,7 @@ def close(code):
 
 def send_msg(socket, msg) -> str:
     socket.send(f'{msg}\n'.encode())
-    return socket.recvline().decode('utf8')
+    return socket.recv().decode('utf8')
 
 
 cmd = sys.argv[1]
@@ -61,13 +69,16 @@ def get():
         s.recvline()
         res3 = s.recvline()
         captcha_hash = str(res3).split("ct=")[1][:-3]
+
         answer = 0
         for i in range(0, 300000):
             if hashlib.md5(str(i).encode()).hexdigest() == captcha_hash:
                 answer = i
         send_msg(s, answer)
         res = send_msg(s, f"get {flag_id}")
+
         r = int(res.split('r=')[1].split('\n')[0])
+
         g = int(res.split('g=')[1].split('\n')[0])
         ct = int(res.split('ct=')[1].split('\n')[0])
 
@@ -75,9 +86,12 @@ def get():
             print("bad params return")
             close(CORRUPT)
 
-        res = str(redis_connection.get(r)).split(",")
-        aV = res[0]
-        bV = res[1]
+        res = redis_connection.get(str(r)).decode().split(",")
+        aV = lucasV(int(res[0]),1,-1)
+        bV = lucasV(int(res[1]),1,-1)
+
+        aV = min(aV, bV)
+        bV = max(av, bV)
 
         a = sympy.prevprime(aV)
         b = sympy.nextprime(bV)
@@ -88,9 +102,9 @@ def get():
 
         h = pow(g, n, n)
 
-        g2 = random.randint(1,n)
-        our_ct = (pow(g, flag, n) * pow(h, g2, n)) % n
-        if L(pow(our_ct, a-1,a*a),a) != L(pow(ct, a - 1, a * a), a):
+        g2 = random.randint(1, n)
+        our_ct = (pow(g, bytes_to_long(flag.encode()), n) * pow(h, g2, n)) % n
+        if L(pow(our_ct, a - 1, a * a), a) != L(pow(ct, a - 1, a * a), a):
             print("bad params return")
             close(CORRUPT)
 
