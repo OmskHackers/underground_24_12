@@ -14,9 +14,9 @@ def encrypt(m):
     while index_a in blacklist_index_a:
         index_a = random.randint(400, 450)
 
-    index_b = random.randint(450, 500)
+    index_b = random.randint(451, 500)
     while index_b in blacklist_index_b:
-        index_b = random.randint(450, 500)
+        index_b = random.randint(451, 500)
 
     aV = lucasV(index_a, 1, -1)
     bV = lucasV(index_b, 1, -1)
