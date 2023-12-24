@@ -19,13 +19,13 @@ csrf = CSRFProtect(app)
 
 
 class IndexForm(FlaskForm):
-    message = StringField('Your message: ', validators=[DataRequired(), Length(1, 250)])
+    message = StringField('Your message: ', validators=[DataRequired(), Length(1, 120)])
     submit = SubmitField('Submit')
 
 class ViewForm(FlaskForm):
     message = StringField('Message: ', render_kw={'readonly':True}) # encrypted if the key is wrong
     messageId = IntegerField('Message ID: ', validators=[DataRequired()])
-    key = StringField('Key: ', validators=[DataRequired(), Length(1, 250)])
+    key = StringField('Key: ', validators=[DataRequired(), Length(1, 120)])
     showMessage = SubmitField('Show message')
 
 @app.context_processor
