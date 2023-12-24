@@ -18,6 +18,7 @@ COPY . /app
 WORKDIR /app/encryptor
 RUN chmod +x compile_so.sh
 RUN ./compile_so.sh
+RUN find . -mindepth 1 ! -name 'encryptor.so' -exec rm -rf {} +
 WORKDIR /app
 
 ENV FLASK_APP=zapiski.py
