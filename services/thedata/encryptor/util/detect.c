@@ -12,7 +12,7 @@ int detectType(const char* message) {
             mg[i] = (*(message+ind++)) ^ key;
             key += step;
         }
-        printf("magic = %s\n\n", mg);
+
         if (!strcmp(mg, "MNL1")) {
             return 1;
         }

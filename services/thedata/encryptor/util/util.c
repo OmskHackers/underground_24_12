@@ -94,6 +94,7 @@ int recollect(char* buffer, const long int length, Entry* elements, const long i
         if (idx + elements[i].length > length) {
             return -1;
         }
+        memcpy(buffer + idx, elements[i].data, elements[i].length);
         idx += elements[i].length;
     }
     return 0;
