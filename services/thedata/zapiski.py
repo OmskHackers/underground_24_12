@@ -49,7 +49,6 @@ def index():
         message = form.message.data
         result = encryptor.encrypt(message)
         (error, encryptedMessage, key) = result
-        # sleep(10) todo remove
         if error != '':
             return render_template('index.html', form=form, error_msg=error)
         messageId = None

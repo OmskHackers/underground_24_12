@@ -30,14 +30,17 @@ def encrypt(message : str) -> tuple[str]:
     if not _encrypt:
         _encrypt = _getLib().encrypt
         _encrypt.argtypes = [Entry, ctypes.c_char_p, ctypes.c_long] # textEntry, output, outputBuffer
-    messageBytes = message.encode('ascii')
+    try:
+        messageBytes = message.encode('ascii')
+    except:
+        return ('non-ascii characters are not supported', '', '')
     messageEntry = Entry(messageBytes, len(messageBytes))
     outCharPtr = ctypes.create_string_buffer(BUFFER_SIZE)
     _encrypt(messageEntry, outCharPtr, BUFFER_SIZE)
     out = util.parseRecollected(outCharPtr.raw)
     if len(out) < 3:
         return ('error parsing parsing recollection, len(out) < 3', '', '')
-    error = out[0].decode('ascii')
+    error = out[0].decode('ascii', 'ignore')
     encryptedMessage = base64.b64encode(out[1]).decode('ascii')
     key = base64.b64encode(out[2]).decode('ascii')
     return (error, encryptedMessage, key)
