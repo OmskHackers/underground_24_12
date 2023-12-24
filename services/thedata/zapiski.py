@@ -17,6 +17,8 @@ app.secret_key = secrets.token_urlsafe(16)
 bootstrap = Bootstrap5(app)
 csrf = CSRFProtect(app)
 
+app.config['WTF_CSRF_ENABLED'] = False
+
 
 class IndexForm(FlaskForm):
     message = StringField('Your message: ', validators=[DataRequired(), Length(1, 120)])
