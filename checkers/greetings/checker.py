@@ -3,6 +3,7 @@ import random
 import string
 import requests
 import sys
+from pathlib import Path
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -18,7 +19,6 @@ port = 3000
 
 
 def close(code):
-    print('Exit with code {}'.format(code), file=sys.stderr)
     exit(code)
 
 
@@ -55,7 +55,7 @@ def get():
             print("bad get description")
             close(CORRUPT)
 
-        res_description = str(res.json()['message']['description'])
+        res_description = str(res.json()['description'])
         if res_description != description:
             print("bad get description")
             close(CORRUPT)
@@ -102,19 +102,25 @@ def put():
             print("bad login")
             close(CORRUPT)
 
-        image = Image.open('white_image.png')
+        BASE_DIR = Path(__file__).absolute().resolve().parent
+        image_local_path = BASE_DIR / 'white_image.png'
+
+        image = Image.open(str(image_local_path))
 
         i = image.copy()
 
+        BASE_DIR = Path(__file__).absolute().resolve().parent
+        ttf_local_path = BASE_DIR / 'Arial.ttf'
+
         Im = ImageDraw.Draw(i)
-        mf = ImageFont.truetype('Arial.ttf', 25)
+        mf = ImageFont.truetype(str(ttf_local_path), 25)
 
         Im.text((15, 15), flag, (255, 0, 0), font=mf)
 
         image_buffer = BytesIO()
         image.save(image_buffer, format='PNG')
 
-        files = {'image': ('white_image.png', image_buffer.getvalue(), 'image/png')}
+        files = {'image': (str(image_local_path), image_buffer.getvalue(), 'image/png')}
 
         description = generator()
 
@@ -147,3 +153,4 @@ if __name__ == "__main__":
         put()
     elif cmd == 'info':
         print('1')
+
