@@ -1,35 +1,142 @@
 #!/usr/bin/env python3
+import random
+import string
+import requests
+import sys
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+from io import BytesIO
+
+
+def generator(size=12, chars=string.digits + string.ascii_letters):
+    return ''.join(random.choice(chars) for _ in range(size))
+
 
 OK, CORRUPT, MUMBLE, DOWN = 101, 102, 103, 104
+port = 3000
 
-# OK — сервис функционирует нормально.
-# MUMBLE — часть функционала сервиса не работает (например, вы отключили поиск по картинке в поисковике и пользователь не может им воспользоваться).
-# CORRUPT — невозможно получить данные пользователя (например, пользователь отправлял письмо, но теперь не может его найти в исходящих из-за атаки другой команды).
-# DOWN — сервис не доступен по сети.
 
 def close(code):
     print('Exit with code {}'.format(code), file=sys.stderr)
     exit(code)
 
+
 cmd = sys.argv[1]
 
-#def check():
-#    ip = sys.argv[2]
-#    в конце, если всё успешно, нужно close(OK) или другой код
-#def get():
-#    ip = sys.argv[2]
-#    flag_id = sys.argv[3] # опять же эти данные жюрейка заберёт с print'a в конце функции put и подставит сюда
-#    # например, если мы в путе сделали print('username:password'), то сюда он нам и придёт в таком виде
-#    flag = sys.argv[4]
-#    vuln_id = sys.argv[5] # если в сервисе несколько мест для хранения флагов (если одно, то не трогаем)
-#    в конце, если всё успешно, нужно close(OK) или другой код
-#def put():
-#    ip = sys.argv[2]
-#    flag_id = sys.argv[3] # по сути это данные для авторизации в сервисе и мы можем генерить их сами (но жюрейка по дефолту их генерит и вставляет в 3й аргумент
-#    flag = sys.argv[4]
-#    vuln_id = sys.argv[5] # если в сервисе несколько мест для хранения флагов (если одно, то не трогаем)
-#
-#    в конце, если всё успешно, нужно сделать print(flag_id) и close(OK)
+
+def check():
+    ip = sys.argv[2]
+    url = f'http://{ip}:{port}'
+    try:
+        requests.get(url + '/login')
+        close(OK)
+    except Exception as e:
+        print(str(e))
+        close(DOWN)
+
+
+def get():
+    ip = sys.argv[2]
+    flag_id = sys.argv[3]
+
+    url = f'http://{ip}:{port}'
+    checker_info = flag_id.split(':')
+
+    img_id = checker_info[0]
+    description = checker_info[1]
+    session = checker_info[2]
+    cookies = {'session': session}
+
+
+    try:
+        res = requests.get(url + f'/api/user/greeting/description/?id={img_id}', cookies=cookies)
+        if 'error' in res.text:
+            print("bad get description")
+            close(CORRUPT)
+
+        res_description = str(res.json()['message']['description'])
+        if res_description != description:
+            print("bad get description")
+            close(CORRUPT)
+
+        res = requests.get(url + f'/api/user/greeting/file/?id={img_id}', cookies=cookies)
+        start_bytes = bytearray(res.content[:10])
+        description = description.encode()
+        for i in range(0, 10):
+            start_bytes[i] ^= description[i % len(description)]
+
+        if not str(start_bytes).__contains__('PNG'):
+            print("bad get image")
+            close(CORRUPT)
+
+        close(OK)
+    except Exception as e:
+        print(str(e))
+        close(MUMBLE)
+
+
+def put():
+    ip = sys.argv[2]
+    url = f'http://{ip}:{port}'
+
+    username = generator()
+    password = generator()
+
+    flag = sys.argv[4]
+
+    try:
+        res = requests.post(url + '/api/auth/register', allow_redirects=False, json={
+            'username': username,
+            'password': password
+        })
+
+        if 'error' in res.text:
+            print("bad register")
+            close(CORRUPT)
+
+        session = res.json()['message']['user']['session_value']
+        cookies = {'session': session}
+
+        if 'error' in res.text:
+            print("bad login")
+            close(CORRUPT)
+
+        image = Image.open('white_image.png')
+
+        i = image.copy()
+
+        Im = ImageDraw.Draw(i)
+        mf = ImageFont.truetype('Arial.ttf', 25)
+
+        Im.text((15, 15), flag, (255, 0, 0), font=mf)
+
+        image_buffer = BytesIO()
+        image.save(image_buffer, format='PNG')
+
+        files = {'image': ('white_image.png', image_buffer.getvalue(), 'image/png')}
+
+        description = generator()
+
+        data = {
+            'description': description
+        }
+
+        res = requests.post(url + '/api/user/greeting', data=data, files=files, cookies=cookies)
+
+        if 'error' in res.text:
+            print("bad upload file")
+            close(CORRUPT)
+
+        # img_id должно быть в аттак дате. остальное (description, session) - приватная для чекера
+        img_id = str(res.json()['message']['id'])
+        flag_id = img_id + ":" + description + ":" + session
+        print(flag_id)
+        close(OK)
+    except Exception as e:
+        print(str(e))
+        close(MUMBLE)
+
 
 if __name__ == "__main__":
     if cmd == 'check':
@@ -39,10 +146,4 @@ if __name__ == "__main__":
     elif cmd == 'put':
         put()
     elif cmd == 'info':
-        print('1') # количество мест для хранения флагов (это vuln_id), например если мест 4, то print("vulns: 1:1:1:1")
-
-# СОВЕТЫ и РЕКОМЕНДАЦИИ
-# 1. в функции check лучше всего просто проверять 1 запросом - живой ли сервер и возвращать либо ОК либо DOWN, таймаут 5 секунд
-# 2. в функции put должен быть только 1 print с flag_id (то есть с данным для авторизации, которые вы зарегали), кроме исключений как мамбл или коррупт
-# 3. стараться делать чекер стабильнее и обрабатывать все исключения
-# 4. если происходит какое-то исключение, то возвращайте close с соответсвующим кодом и перед этим делайте print с инфой, например 'ошибка в авторизации'
+        print('1')
