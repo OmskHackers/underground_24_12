@@ -1,0 +1,27 @@
+version: '3'
+services:
+    univeria:
+        build:
+          context: service-univeria
+          dockerfile: Dockerfile
+        container_name: "univeria"
+        ports:
+            - 9000:3000
+        depends_on:
+            - mongodb
+        restart: always
+        command: npm run dev
+        mem_limit: 1024M
+        cpus: 0.5
+    mongodb:
+        image: mongo:3.4
+        container_name: "mongodb"
+        restart: always
+        environment:
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/data/logs
+          - MONGO_INITDB_DATABASE=univeria
+        volumes:
+          - ./data/initdb:/docker-entrypoint-initdb.d
+          - ./data/db:/data/db
+          - ./data/logs:/data/logs

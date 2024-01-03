@@ -1,0 +1,677 @@
+<head>
+    <title>Univeria</title>
+    <link rel="stylesheet" type="text/css" href="/client/css/style.css">
+    <link rel="stylesheet" type="text/css" id="bootstrap-css" href="/client/css/bootstrap.min.css">
+</head>
+
+<body style="width: 100%; height: 80%; overflow: hidden; background: skyblue;">
+
+    <div id="signDiv" class="container">
+    	<div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-xs-6">
+								<a href="#" class="active" id="login-form-link">Sign In</a>
+							</div>
+							<div class="col-xs-6">
+								<a href="#" id="register-form-link">Sign Up</a>
+							</div>
+						</div>
+						<hr>
+					</div>
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-lg-12">
+								<form id="login-form" role="form" style="display: block;">
+									<div class="form-group">
+										<input type="text" name="username" id="signIn-username" tabindex="1" class="form-control" placeholder="Username" value="">
+									</div>
+									<div class="form-group">
+										<input type="password" name="password" id="signIn-password" tabindex="2" class="form-control" placeholder="Password">
+									</div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+                                                <button id="signIn" class="form-control btn btn-login" tabindex="4" type="button" name="button">Sign In</button>
+											</div>
+										</div>
+									</div>
+								</form>
+								<form id="register-form" role="form" style="display: none;">
+									<div class="form-group">
+										<input type="text" name="username" id="signUp-username" tabindex="1" class="form-control" placeholder="Username" value="">
+									</div>
+									<div class="form-group">
+										<input type="password" name="password" id="signUp-password" tabindex="2" class="form-control" placeholder="Password">
+									</div>
+                                    <div class="form-group ">
+                                          <label class="radio-inline"><input type="radio" value="Mage" name="gameclass">Mage</label>
+                                          <label class="radio-inline"><input type="radio" value="Rogue" name="gameclass">Rogue</label>
+                                          <label class="radio-inline"><input type="radio" value="War" name="gameclass">War</label>
+                                    </div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+                                                <button id="signUp" class="form-control btn btn-register" tabindex="4" type="button" name="button">Sign Up</button>
+											</div>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <div id="gameDiv" style="display:none;">
+        <div id="game" style="position:absolute;width:500px;height:500px;left: 0px;right: 0px;top: 0px;bottom: 0px;margin: auto;">
+            <canvas id="ctx" width="500" height="500" style="position:absolute;border:1px solid #000000;"></canvas>
+            <canvas id="ctx-ui" width="500" height="500" style="position:absolute;border:1px solid #000000;"></canvas>
+        </div>
+
+        <div id="belowGame" style="position: absolute;width:500px;height:100px;left: 0px;right: 0px;top: 0px;bottom: 0px;margin: auto;">
+            <div id="chat-text" style="width:500px;margin-top:180px;height:100px;overflow-y:hidden;padding-left:5px;">
+                <div></div>
+            </div>
+            <div id="inventory"></div>
+            <form id="chat-form">
+                <input type="text" id="chat-input" style="width:502px" disabled></input>
+            </form>
+        </div>
+    </div>
+</body>
+
+<div id="questModal" class="modal">
+<!-- Modal content -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close">&times;</span>
+        <h2 class="title"></h2>
+      </div>
+      <div class="modal-body">
+        <p></p>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-warning" name="shop">Магазин</button>
+      </div>
+    </div>
+<div>
+
+<script src="/client/js/src/jquery-3.3.1.min.js"></script>
+<script src="/client/js/src/bootstrap.min.js"></script>
+<script src="/client/js/src/socket.io.js"></script>
+<script src="/client/js/Inventory.js"></script>
+<script src="/client/js/Entities.js"></script>
+<script>
+    var WIDTH = 500;
+    var HEIGHT = 500;
+    var socket = io();
+
+// -------------------SIGN----------------------------------------------------
+    var signDiv = document.getElementById('signDiv');
+    var signInDivUsername = document.getElementById('signIn-username');
+    var signInDivPassword = document.getElementById('signIn-password');
+    var signUpDivUsername = document.getElementById('signUp-username');
+    var signUpDivPassword = document.getElementById('signUp-password');
+    var signDivSignIn = document.getElementById('signIn');
+    var signDivSignUp = document.getElementById('signUp');
+    var signDivClass = function() {
+        return $("input[name='gameclass']:checked");
+    }
+
+    $(function() {
+        $('#login-form-link').click(function(e) {
+    		$("#login-form").delay(100).fadeIn(100);
+     		$("#register-form").fadeOut(100);
+    		$('#register-form-link').removeClass('active');
+    		$(this).addClass('active');
+    		e.preventDefault();
+    	});
+    	$('#register-form-link').click(function(e) {
+    		$("#register-form").delay(100).fadeIn(100);
+     		$("#login-form").fadeOut(100);
+    		$('#login-form-link').removeClass('active');
+    		$(this).addClass('active');
+    		e.preventDefault();
+    	});
+    });
+
+    signDivSignIn.onclick = function() {
+        socket.emit('signIn', {username:signInDivUsername.value, password:signInDivPassword.value});
+    }
+    signDivSignUp.onclick = function() {
+        var cls = signDivClass().val();
+        if (cls === 'Mage') {
+            var str = 10;
+            var int = 15;
+            var agi = 10;
+        } else if (cls === 'Rogue') {
+            var str = 10;
+            var int = 10;
+            var agi = 15;
+        } else if (cls === 'War') {
+            var str = 15;
+            var int = 10;
+            var agi = 10;
+        } else {
+            alert('Class not selected');
+            return false;
+        }
+
+        socket.emit('signUp', {
+            username:signUpDivUsername.value,
+            password:signUpDivPassword.value,
+            class:cls,
+            str:str,
+            int:int,
+            agi:agi
+        });
+    }
+    socket.on('signInResponse', function(data) {
+        if(data.success){
+            signDiv.style.display = 'none';
+            gameDiv.style.display = 'inline-block';
+        } else {
+            alert('Sign in unsuccessful -_-');
+        }
+    });
+    socket.on('signUpResponse', function(data) {
+        if(data.success){
+            alert('Sign up successful ^_^');
+        } else {
+            alert('Sign up unsuccessful -_-');
+        }
+    });
+//-------------------/SIGN----------------------------------------------------
+
+//-------------------CHAT-----------------------------------------------------
+    var chatText = document.getElementById('chat-text');
+    var chatInput = document.getElementById('chat-input');
+    var chatForm = document.getElementById('chat-form');
+
+    $(chatInput).focusout(function() {
+        $(this).prop('disabled', true);
+    });
+
+    socket.on('addToChat', function(data) {
+        var msg = '<div><b class="chat">' + HTMLescape(data) + '</b></div>';
+        chatText.innerHTML = msg + chatText.innerHTML;
+    });
+    socket.on('evalAnswer', function(data) {
+        console.log(data);
+    });
+
+    chatForm.onsubmit = function(e) {
+        e.preventDefault();
+        if(chatInput.value[0] === '/')
+            socket.emit('evalServer',chatInput.value.slice(1));
+        else if(chatInput.value[0] === '@') {
+            socket.emit('sendPmToServer', {
+                username:chatInput.value.slice(1, chatInput.value.indexOf(',')),
+                message:chatInput.value.slice(chatInput.value.indexOf(',') + 1)
+            });
+        } else {
+            socket.emit('sendMsgToServer',chatInput.value);
+        }
+        chatInput.value = '';
+    }
+//-------------------/CHAT-----------------------------------------------------
+
+//-------------------UI-------------------------------------------------------
+    var questModal = document.getElementById('questModal');
+    var shopBtn = $('button[name="shop"]');
+    var ctx = document.getElementById('ctx').getContext('2d');
+    var ctxUi = document.getElementById('ctx-ui').getContext('2d');
+    ctxUi.font = '30px Arial';
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+        questModal.style.display = "none";
+        socket.emit('closeDialog');
+    }
+    var lastLevel = null;
+    var score = null;
+    var shopOpen = false;
+    var inventoryOpen = false;
+
+    var inventory = new Inventory([],socket,false);
+    socket.on('updateInventory',function(items) {
+        inventory.items = items;
+        inventory.refreshRender();
+    })
+
+    shopBtn.on('click', function() {
+        if (shopOpen) {
+            shopOpen = false;
+            questModal.style.display = "none";
+            socket.emit('closeDialog');
+            return;
+        }
+
+        $(this).text('Ну, я пошел');
+        showShop();
+        socket.emit('showShop');
+        shopOpen = true;
+    });
+
+    showShop = function() {
+        var mbody = $(questModal).find('.modal-body');
+        var mtitle = $(questModal).find('.title');
+        var mbtn = $(questModal).find('button[name="answer"]');
+        var tbtn = $(questModal).find('button[name="trade"]');
+        var self = this;
+
+        mtitle.empty();
+        mbody.empty();
+        mbtn.remove();
+        mtitle.append('Магазин у Фуа');
+
+        if (tbtn.length <= 0) {
+            $(questModal).find('.modal-footer').append('<button class="btn btn-primary" name="trade">Инвентарь</button>');
+            var tbtn = $(questModal).find('button[name="trade"]');
+            tbtn.on('click', function() {
+                socket.emit('showInventory');
+            });
+        }
+    }
+
+    showInventory = function(items) {
+        var tbtn = $(questModal).find('button[name="trade"]')[0];
+        if (inventoryOpen) {
+            tbtn.innerText = 'Инвентарь';
+            inventoryOpen = false;
+            shopOpen = true;
+            showShop();
+            socket.emit('showShop');
+            return;
+        }
+
+        var mbody = $(questModal).find('.modal-body');
+        var mtitle = $(questModal).find('.title');
+        mtitle.empty();
+        mbody.empty();
+        mtitle.append('Инвентарь');
+        tbtn.innerText = 'Назад';
+        showItems(items, 'action-sell', 'Sell', true);
+
+        var tradeBtn = $('button[name="action-sell"]');
+
+        tradeBtn.on('click', function() {
+            desc = $($(this).parents()[1]).children().find('input[name="description"]').val();
+            price = $($(this).parents()[1]).children().find('input[name="price"]').val();
+            socket.emit('Sell', this.id, desc, price);
+        });
+        inventoryOpen = true;
+    };
+
+    showItems = function(items, btnName, btnTitle, inventory = false) {
+        var player = Player.list[selfId];
+        var mbody = $(questModal).find('.modal-body');
+        mbody.removeClass('container-fluid');
+        mbody.empty();
+        mbody.addClass('container-fluid');
+        row = $('<div class="row"></div>');
+        row.append('<div class="col-md-2" name="from"><b>From:<b></div>');
+        row.append('<div class="col-md-2" name="name"><b>Item:</b></div>');
+        row.append('<div class="col-md-2" name="price"><b>Price:</b></div>');
+        if (inventory)
+            row.append('<div class="col-md-4" name="description"><b>Description:</b></div>');
+        row.append('<div class="col-md-2" name="action"><b>Action:</b></div>');
+        mbody.append(row);
+        var from = mbody.find('div[name="from"]');
+        var name = mbody.find('div[name="name"]');
+        var price = mbody.find('div[name="price"]');
+        var action = mbody.find('div[name="action"]');
+        if (inventory) {
+            var description = mbody.find('div[name="description"]');
+        }
+        if (items && items.length > 0) {
+            for (i in items.reverse()) {
+                var item = items[i];
+                if (item.name === 'money' || item.amount <= 0)
+                    continue;
+                row = $('<div class="row"></div>');
+                from = $('<div class="col-md-2" name="from"></div>').append('<p>'+HTMLescape(item.from)+'</p>');
+                name = $('<div class="col-md-2" name="name"></div>').append('<p>'+item.name+'</p>');
+                if (inventory && player.username !== item.from) {
+                    price = $('<div class="col-md-2" name="price"></div>').append('<input type="number" name="price" value="'+item.price+'"></input>');
+                    description = $('<div class="col-md-4" name="description"></div>').append('<input name="description" type="text" value="'+HTMLescape(item.description)+'"></input>');
+                    action = $('<div class="col-md-2" name="action"></div>').append('<button class="btn btn-info trade-btn" name="'+btnName+'" id="'+item.id+'">'+btnTitle+'</button>');
+                } else if (inventory) {
+                    price = $('<div class="col-md-2" name="price"></div>').append('<p>'+item.price+'</p>');
+                    description = $('<div class="col-md-4" name="description"></div>').append('<p>'+HTMLescape(item.description)+'</p>');
+                    action = $('<div class="col-md-2" name="action"></div>').append('<button class="btn trade-btn" disabled> Sale</button>');
+                } else {
+                    price = $('<div class="col-md-2" name="price"></div>').append('<p>'+item.price+'</p>');
+                    action = $('<div class="col-md-2" name="action"></div>').append('<button class="btn btn-info trade-btn" name="'+btnName+'" id="'+item.id+'">'+btnTitle+'</button>');
+                }
+
+                if (inventory)
+                    row.append(from,name,price,description,action);
+                else
+                    row.append(from,name,price,action);
+
+                mbody.append(row);
+            }
+        }
+
+    }
+
+    window.onclick = function(event) {
+        if (event.target == questModal) {
+            questModal.style.display = "none";
+            socket.emit('closeDialog');
+        }
+        if (event.target == chatInput) {
+            $(chatInput).prop('disabled', false);
+        }
+    }
+    // off draggable
+    window.ondragstart = function() { return false; }
+
+    var drawLevel = function() {
+        if(score === Player.list[selfId].score && lastLevel === Player.list[selfId].level)
+            return;
+        lastLevel = Player.list[selfId].level;
+        score = Player.list[selfId].score;
+
+        scoreForNextLevel = (lastLevel + 1) * 100;
+        scoreCurrentLevel = score - getScoreLevel(lastLevel);
+        var al = scoreCurrentLevel / (scoreForNextLevel/100); //percent
+        progressBar(al, lastLevel);
+    }
+
+    function getScoreLevel(level) {
+        var score = 0;
+        for (var i = 1; i < level; i++) {
+            score += (i+1) * 100;
+        }
+        return score;
+    }
+
+    function progressBar(al, lastLevel) {
+        var cw = ctxUi.canvas.width/2;
+        var ch = ctxUi.canvas.height/2;
+        var diff=(al/100)*Math.PI*2;
+        ctxUi.clearRect(0,0,500,500);
+        ctxUi.beginPath();
+        ctxUi.fillStyle='white';
+        ctxUi.strokeStyle='darkgrey';
+        ctxUi.textAlign='center';
+        ctxUi.lineWidth=15;
+        ctxUi.font = 'bold 12pt Arial';
+        ctxUi.beginPath();
+        ctxUi.arc(30,30,20,30,diff+30,false);
+        ctxUi.stroke();
+        ctxUi.fillText(lastLevel, 30, 35);
+    }
+//-------------------/UI-----------------------------------------------------
+
+//-------------------GAME-------------------------------------------------------
+    var selfId = null;
+
+    socket.on('init', function(data) {
+        if(data.selfId)
+            selfId = data.selfId;
+        for(var i = 0; i < data.player.length; i++){
+            new Player(data.player[i]);
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            new Bullet(data.bullet[i]);
+        }
+        for(var i = 0; i < data.npc.length; i++){
+            new Npc(data.npc[i]);
+        }
+        for(var i = 0; i < data.monster.length; i++){
+            new Monster(data.monster[i]);
+        }
+        for(var i = 0; i < data.portal.length; i++){
+            new Portal(data.portal[i]);
+        }
+    });
+
+    socket.on('update',function(data) {
+        for(var i = 0; i < data.player.length; i++){
+            var pack = data.player[i];
+            var p = Player.list[pack.id];
+            if(p) {
+                p.x = updateVar(pack.x, p.x);
+                p.y = updateVar(pack.y, p.y);
+                p.hp = updateVar(pack.hp, p.hp);
+                p.mana = updateVar(pack.mana, p.mana);
+                p.score = updateVar(pack.score, p.score);
+                p.level = updateVar(pack.level, p.level);
+                p.map = updateVar(pack.map, p.map);
+                p.mouseAngle = updateVar(pack.mouseAngle, p.mouseAngle);
+                p.spriteAnimCounter = updateVar(pack.spriteAnimCounter, p.spriteAnimCounter);
+            }
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            var pack = data.bullet[i];
+            var b = Bullet.list[data.bullet[i].id];
+            if(b) {
+                b.x = updateVar(pack.x, b.x);
+                b.y = updateVar(pack.y, b.y);
+            }
+        }
+        for(var i = 0; i < data.npc.length; i++){
+            var pack = data.npc[i];
+            var n = Npc.list[data.npc[i].id];
+            if(n) {
+                n.x = updateVar(pack.x, n.x);
+                n.y = updateVar(pack.y, n.y);
+                n.hp = updateVar(pack.hp, n.hp);
+                n.map = updateVar(pack.map, n.map);
+                n.mouseAngle = updateVar(pack.mouseAngle, n.mouseAngle);
+                n.spriteAnimCounter = updateVar(pack.spriteAnimCounter, n.spriteAnimCounter);
+            }
+        }
+        for(var i = 0; i < data.monster.length; i++){
+            var pack = data.monster[i];
+            var m = Monster.list[data.monster[i].id];
+            if(m) {
+                m.x = updateVar(pack.x, m.x);
+                m.y = updateVar(pack.y, m.y);
+                m.hp = updateVar(pack.hp, m.hp);
+                m.map = updateVar(pack.map, m.map);
+                m.mouseAngle = updateVar(pack.mouseAngle, m.mouseAngle);
+                m.spriteAnimCounter = updateVar(pack.spriteAnimCounter, m.spriteAnimCounter);
+            }
+        }
+    });
+
+    socket.on('remove',function(data) {
+        for(var i = 0; i < data.player.length; i++){
+            delete Player.list[data.player[i]];
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            delete Bullet.list[data.bullet[i]];
+        }
+        for(var i = 0; i < data.npc.length; i++){
+            delete Npc.list[data.npc[i]];
+        }
+        for(var i = 0; i < data.monster.length; i++){
+            delete Monster.list[data.monster[i]];
+        }
+    });
+
+    socket.on('showQuest', function(response) {
+        shopOpen = false;
+        var mbody = $(questModal).find('.modal-body');
+        var mtitle = $(questModal).find('.title');
+        var mbtn = $(questModal).find('button[name="answer"]');
+        var tbtn = $(questModal).find('button[name="trade"]');
+        var self = this;
+        var counter = makeCounter();
+        $(shopBtn).text('Магазин');
+
+        mtitle.empty();
+        mbody.empty();
+        mbtn.remove();
+        if (tbtn)
+            tbtn.remove();
+
+        if (response.answers[0].length > 0) {
+            $(questModal).find('.modal-footer').append('<button class="btn btn-info" name="answer">'+response.answers[0]+'</button>');
+            var mbtn = $(questModal).find('button[name="answer"]');
+
+            mbtn.on('click', function() {
+                var i = counter.getCurrent();
+
+                if (i < response.answers.length) {
+                    $(this)[0].innerText = response.answers[i];
+                    mbody.append('<p>'+response.description[i]+'</p>');
+                    counter.getNext();
+                } else {
+                    self.emit('getQuest');
+                    self.emit('showQuest');
+                    return;
+                }
+            });
+        }
+
+        socket.emit('openDialog');
+        mbody.append('<p>'+response.description[0]+'</p>');
+        mtitle.append(response.title);
+        questModal.style.display = "block";
+    });
+
+    socket.on('showInventory', function(response) {
+        showInventory(response);
+    });
+
+    socket.on('showShop', function(response) {
+        showItems(response, 'action-buy', 'Buy');
+
+        var tradeBtn = $('button[name="action-buy"]');
+        tradeBtn.on('click', function() {
+            socket.emit('Buy', this.id);
+        });
+    });
+
+    var drawMap = function() {
+        var player = Player.list[selfId];
+        var x = WIDTH/2 - player.x;
+        var y = HEIGHT/2 - player.y;
+        ctx.drawImage(Img.map[player.map],x,y);
+    }
+
+    setInterval(function() {
+        if(!selfId)
+            return;
+        ctx.clearRect(0,0,500,500);
+        drawMap();
+        drawLevel();
+        for(var i in Player.list)
+            Player.list[i].draw();
+        for(var i in Npc.list)
+            Npc.list[i].draw();
+        for(var i in Monster.list)
+            Monster.list[i].draw();
+        for(var i in Bullet.list)
+            Bullet.list[i].draw();
+        for(var i in Portal.list)
+            Portal.list[i].draw();
+    },40);
+
+    document.onkeydown = function(event) {
+        if(event.keyCode === 68) { //d
+            socket.emit('keyPress', {inputId:'right',state:true});
+            socket.emit('keyPress', {inputId:'left',state:false});
+        } else if(event.keyCode === 83) { //s
+            socket.emit('keyPress', {inputId:'down',state:true});
+            socket.emit('keyPress', {inputId:'up',state:false});
+        } else if(event.keyCode === 65) { //a
+            socket.emit('keyPress', {inputId:'left',state:true});
+            socket.emit('keyPress', {inputId:'right',state:false});
+        } else if(event.keyCode === 87) { //w
+            socket.emit('keyPress', {inputId:'up',state:true});
+            socket.emit('keyPress', {inputId:'down',state:false});
+        } else if(event.keyCode === 49) { //1
+            if (Player.list[selfId] !== undefined && Player.list[selfId].map === 'field')
+                return;
+            socket.emit('keyPress', {inputId:'ability',state:true});
+        }
+    }
+    document.onkeyup = function(event) {
+        if(event.keyCode === 68) //d
+            socket.emit('keyPress', {inputId:'right',state:false});
+        else if(event.keyCode === 83) //s
+            socket.emit('keyPress', {inputId:'down',state:false});
+        else if(event.keyCode === 65) //a
+            socket.emit('keyPress', {inputId:'left',state:false});
+        else if(event.keyCode === 87) //w
+            socket.emit('keyPress', {inputId:'up',state:false});
+        else if(event.keyCode === 49) //1
+            socket.emit('keyPress', {inputId:'ability',state:false});
+    }
+    document.onmousedown = function(event) {
+        var player = Player.list[selfId];
+        if (player) {
+            var clickX = player.x + (event.clientX  - document.body.clientWidth/2);
+            var clickY = player.y + (event.clientY  - document.body.clientHeight/2);
+            if (Npc.list[1].x - SPRITEWIDTH/4 < clickX && clickX < Npc.list[1].x + SPRITEWIDTH/4 &&
+            Npc.list[1].y - SPRITEHEIGHT/4 < clickY && clickY < Npc.list[1].y + SPRITEHEIGHT/4)
+                response = socket.emit('showQuest');
+
+            if (player.map === 'field')
+                return;
+        }
+
+        socket.emit('keyPress', {inputId:'attack',state:true});
+    }
+    document.onmouseup = function(event) {
+        socket.emit('keyPress', {inputId:'attack',state:false});
+    }
+    document.onmousemove = function(event){
+        var x = event.clientX - document.body.clientWidth/2;
+        var y = event.clientY - document.body.clientHeight/2;
+        var angle = Math.atan2(y,x) / Math.PI * 180;
+        socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
+    }
+
+    document.oncontextmenu = function(event) {
+        event.preventDefault();
+    }
+//-------------------/GAME-------------------------------------------------------
+
+//-------------------HELPER----------------------------------------------------
+    function makeCounter() {
+      var currentCount = 1;
+
+      return { // возвратим объект вместо функции
+        getCurrent: function() {
+            return currentCount;
+        },
+
+        getNext: function() {
+          return currentCount++;
+        },
+
+        set: function(value) {
+          currentCount = value;
+        },
+
+        reset: function() {
+          currentCount = 1;
+        }
+      };
+    }
+
+    function updateVar(var1, var2) {
+        if (var1 !== undefined)
+            var2 = var1;
+        return var2;
+    }
+
+    function HTMLescape(html){
+        return document.createElement('div')
+            .appendChild(document.createTextNode(html))
+            .parentNode
+            .innerHTML
+    }
+//-------------------/HELPER----------------------------------------------------
+</script>
