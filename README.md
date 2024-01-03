@@ -11,7 +11,9 @@ Coming...
 | Service | Language | Checker | Sploits | Authors |
 |---------|----------|---------|---------|---------|
 | **[greetings](services/greetings/)** | Go/nuxt | [Checker](checkers/greetings/) | [Sploits](sploits/greetings/) | [@gusyaross](https://github.com/gusyaross) |
-| **[greetings](services/strongbox/)** | Python | [Checker](checkers/strongbox/) | [Sploits](sploits/strongbox/) | [@gusyaross](https://github.com/gusyaross) |
+| **[strongbox](services/strongbox/)** | Python | [Checker](checkers/strongbox/) | [Sploits](sploits/strongbox/) | [@gusyaross](https://github.com/gusyaross) |
+| **[univeria](services/univeria/)** | NodeJS | [Checker](checkers/univeria/) | [Sploits](sploits/univeria/) | OmCTF dev |
+| **[zapiski](services/zapiski/)** | C | [Checker](checkers/zapiski/) | [Sploits](sploits/zapiski/) | [@pc_rockfeller](https://github.com/pc_rockfeller) |
 
 
 ## Infrastructure
